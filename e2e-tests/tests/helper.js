@@ -75,7 +75,7 @@ const deleteBlog = async (page, blogLocator) => {
   })
 
   await page.getByRole('button', {
-    name: 'delete',
+    name: 'remove',
   }).click()
 }
 
