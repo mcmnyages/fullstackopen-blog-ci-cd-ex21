@@ -1,16 +1,26 @@
-const { after, beforeEach, test, describe } = require('node:test')
+
+const { after, before, beforeEach, test } = require('node:test')
 const assert = require('node:assert')
 const mongoose = require('mongoose')
 const supertest = require('supertest')
 const bcrypt = require('bcrypt')
+const { MongoMemoryServer } = require('mongodb-memory-server')
 
 const app = require('../app')
 const Blog = require('../models/blog')
-const User = require('../models/user') 
+const User = require('../models/user')
 const helper = require('./test_helper')
 
 const api = supertest(app)
+
 let token = ''
+let mongoServer
+
+before(async () => {
+  mongoServer = await MongoMemoryServer.create()
+
+  await mongoose.connect(mongoServer.getUri())
+})
 
 beforeEach(async () => {
   await Blog.deleteMany({})
@@ -18,17 +28,31 @@ beforeEach(async () => {
 
   const testPassword = 'sekret'
   const passwordHash = await bcrypt.hash(testPassword, 10)
-  const user = new User({ username: 'testuser', name: 'Test User', passwordHash })
+
+  const user = new User({
+    username: 'testuser',
+    name: 'Test User',
+    passwordHash,
+  })
+
   await user.save()
 
   const response = await api
     .post('/api/login')
-    .send({ username: 'testuser', password: 'sekret' })
-  
+    .send({
+      username: 'testuser',
+      password: 'sekret',
+    })
+
+
   token = response.body.token
 
-  for (let blog of helper.initialBlogs) {
-    const blogObject = new Blog({ ...blog, user: user._id })
+  for (const blog of helper.initialBlogs) {
+    const blogObject = new Blog({
+      ...blog,
+      user: user._id,
+    })
+
     await blogObject.save()
   }
 })
@@ -43,7 +67,10 @@ test('blogs returned as json', async () => {
 test('all blogs returned', async () => {
   const response = await api.get('/api/blogs')
 
-  assert.strictEqual(response.body.length, helper.initialBlogs.length)
+  assert.strictEqual(
+    response.body.length,
+    helper.initialBlogs.length
+  )
 })
 
 test('unique identifier property id named id', async () => {
@@ -60,11 +87,13 @@ test('a valid blog post can be added', async () => {
     title: 'New Blog',
     author: 'New Author',
     url: 'https://example.com/new-blog',
-    likes: 7
+    likes: 7,
   }
+
   const blogsAtStart = await api.get('/api/blogs')
-  
-  await api.post('/api/blogs')
+
+  await api
+    .post('/api/blogs')
     .send(newBlog)
     .set('Authorization', `Bearer ${token}`)
     .expect(201)
@@ -72,14 +101,17 @@ test('a valid blog post can be added', async () => {
 
   const blogsAtEnd = await api.get('/api/blogs')
 
-  assert.strictEqual(blogsAtEnd.body.length, blogsAtStart.body.length + 1)
+  assert.strictEqual(
+    blogsAtEnd.body.length,
+    blogsAtStart.body.length + 1
+  )
 })
 
 test('likes defaults to 0 if missing', async () => {
   const newBlog = {
     title: 'Blog without likes',
     author: 'John Doe',
-    url: 'https://example.com/no-likes'
+    url: 'https://example.com/no-likes',
   }
 
   const response = await api
@@ -94,7 +126,7 @@ test('likes defaults to 0 if missing', async () => {
 test('blog without title is not added', async () => {
   const newBlog = {
     author: 'John Doe',
-    url: 'https://example.com'
+    url: 'https://example.com',
   }
 
   await api
@@ -107,13 +139,13 @@ test('blog without title is not added', async () => {
 test('blog without url is not added', async () => {
   const newBlog = {
     title: 'A blog without URL',
-    author: 'John Doe'
+    author: 'John Doe',
   }
 
   await api
     .post('/api/blogs')
     .send(newBlog)
-    .set('Authorization', `Bearer ${token}`) 
+    .set('Authorization', `Bearer ${token}`)
     .expect(400)
 })
 
@@ -121,7 +153,7 @@ test('blog cannot be added without a token and returns 401', async () => {
   const newBlog = {
     title: 'Unauthorized Blog',
     author: 'Hacker',
-    url: 'https://example.com/unauthorized'
+    url: 'https://example.com/unauthorized',
   }
 
   const blogsAtStart = await helper.blogsInDb()
@@ -133,6 +165,7 @@ test('blog cannot be added without a token and returns 401', async () => {
     .expect('Content-Type', /application\/json/)
 
   const blogsAtEnd = await helper.blogsInDb()
+
   assert.strictEqual(blogsAtEnd.length, blogsAtStart.length)
 })
 
@@ -142,15 +175,22 @@ test('a blog can be deleted', async () => {
 
   await api
     .delete(`/api/blogs/${blogToDelete.id}`)
-    .set('Authorization', `Bearer ${token}`) 
+    .set('Authorization', `Bearer ${token}`)
     .expect(204)
 
   const blogsAtEnd = await helper.blogsInDb()
 
-  assert.strictEqual(blogsAtEnd.length, blogsAtStart.length - 1)
+  assert.strictEqual(
+    blogsAtEnd.length,
+    blogsAtStart.length - 1
+  )
 
-  const titles = blogsAtEnd.map(r => r.title)
-  assert.strictEqual(titles.includes(blogToDelete.title), false)
+  const titles = blogsAtEnd.map(blog => blog.title)
+
+  assert.strictEqual(
+    titles.includes(blogToDelete.title),
+    false
+  )
 })
 
 test('a blog likes can be updated', async () => {
@@ -159,7 +199,7 @@ test('a blog likes can be updated', async () => {
 
   const updatedData = {
     ...blogToUpdate,
-    likes: blogToUpdate.likes + 10
+    likes: blogToUpdate.likes + 10,
   }
 
   const response = await api
@@ -167,13 +207,31 @@ test('a blog likes can be updated', async () => {
     .send(updatedData)
     .expect(200)
 
-  assert.strictEqual(response.body.likes, blogToUpdate.likes + 10)
+  assert.strictEqual(
+    response.body.likes,
+    blogToUpdate.likes + 10
+  )
 
   const blogsAtEnd = await helper.blogsInDb()
-  const updatedBlogInDb = blogsAtEnd.find(b => b.id === blogToUpdate.id)
-  assert.strictEqual(updatedBlogInDb.likes, blogToUpdate.likes + 10)
+
+  const updatedBlogInDb = blogsAtEnd.find(
+    blog => blog.id === blogToUpdate.id
+  )
+
+  assert.strictEqual(
+    updatedBlogInDb.likes,
+    blogToUpdate.likes + 10
+  )
 })
 
 after(async () => {
-  await mongoose.connection.close()
+  try {
+    if (mongoose.connection.readyState !== 0) {
+      await mongoose.connection.close()
+    }
+  } finally {
+    if (mongoServer) {
+      await mongoServer.stop()
+    }
+  }
 })
