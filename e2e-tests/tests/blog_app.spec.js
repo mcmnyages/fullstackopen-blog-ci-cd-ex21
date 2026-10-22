@@ -130,7 +130,7 @@ test('logged-in user can like a blog', async ({ page }) => {
   )
 
   await expect(
-    page.getByText('Likes: 1')
+    page.getByText('1 likes')
   ).toBeVisible()
 })
 

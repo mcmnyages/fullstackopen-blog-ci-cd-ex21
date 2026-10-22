@@ -61,7 +61,7 @@ const likeBlog = async (page, blogLocator, times) => {
     }).click()
 
     await expect(
-      page.getByText(`ikes: ${i + 1} `)
+      page.getByText(`${i + 1} likes`)
     ).toBeVisible()
   }
 }
