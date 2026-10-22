@@ -1,3 +1,4 @@
+
 import {
   useParams,
   useNavigate,
@@ -37,7 +38,6 @@ const Blog = ({ blogs, user, likeBlog, deleteBlog }) => {
     }
 
     await deleteBlog(blog.id)
-
     navigate('/')
   }
 
@@ -55,12 +55,10 @@ const Blog = ({ blogs, user, likeBlog, deleteBlog }) => {
       }}
     >
       <CardContent>
-        <Typography
-          variant="h4"
-          gutterBottom
-        >
+        <Typography variant="h4" gutterBottom>
           {blog.title}
         </Typography>
+
         <Typography
           variant="subtitle1"
           color="text.secondary"
@@ -68,6 +66,7 @@ const Blog = ({ blogs, user, likeBlog, deleteBlog }) => {
         >
           by {blog.author}
         </Typography>
+
         <Typography
           component="a"
           href={blog.url}
@@ -80,13 +79,16 @@ const Blog = ({ blogs, user, likeBlog, deleteBlog }) => {
         >
           {blog.url}
         </Typography>
+
         <Typography
           variant="body2"
           color="text.secondary"
         >
           Added by {blog.user.name}
         </Typography>
+
         <Divider sx={{ mb: 2 }} />
+
         <Box
           sx={{
             display: 'flex',
@@ -96,14 +98,18 @@ const Blog = ({ blogs, user, likeBlog, deleteBlog }) => {
           }}
         >
           <Typography>
-            Likes: {blog.likes}
+            {blog.likes} likes
           </Typography>
-          <Button
-            variant="contained"
-            onClick={handleLike}
-          >
-            Like
-          </Button>
+
+          {user && (
+            <Button
+              variant="contained"
+              onClick={handleLike}
+            >
+              Like
+            </Button>
+          )}
+
           {isCreator && (
             <Button
               variant="outlined"

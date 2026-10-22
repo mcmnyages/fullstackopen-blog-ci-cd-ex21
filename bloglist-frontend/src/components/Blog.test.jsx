@@ -1,3 +1,4 @@
+
 import {
   render,
   screen,
@@ -50,18 +51,17 @@ test('unauthenticated user sees blog information but no buttons', () => {
   ).toBeDefined()
 
   expect(
-    screen.getByText('10 likes')
+    screen.getByText(/10\s*likes/i)
   ).toBeDefined()
 
   expect(
-    screen.queryByText('like')
+    screen.queryByRole('button', { name: /like/i })
   ).toBeNull()
 
   expect(
-    screen.queryByText('delete')
+    screen.queryByRole('button', { name: /remove/i })
   ).toBeNull()
 })
-
 
 test('authenticated user who is not the creator sees like button but not delete button', () => {
   const user = {
@@ -76,14 +76,13 @@ test('authenticated user who is not the creator sees like button but not delete 
   ).toBeDefined()
 
   expect(
-    screen.getByText('like')
+    screen.getByRole('button', { name: /like/i })
   ).toBeDefined()
 
   expect(
-    screen.queryByText('delete')
+    screen.queryByRole('button', { name: /remove/i })
   ).toBeNull()
 })
-
 
 test('blog creator sees both like and delete buttons', () => {
   const user = {
@@ -94,10 +93,10 @@ test('blog creator sees both like and delete buttons', () => {
   renderBlog(user)
 
   expect(
-    screen.getByText('like')
+    screen.getByRole('button', { name: /like/i })
   ).toBeDefined()
 
   expect(
-    screen.getByText('delete')
+    screen.getByRole('button', { name: /remove/i })
   ).toBeDefined()
 })
