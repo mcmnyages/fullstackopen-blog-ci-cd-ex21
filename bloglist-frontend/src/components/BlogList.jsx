@@ -2,10 +2,9 @@ import { Link } from 'react-router-dom'
 import {
   Typography,
   Box,
-  Card,
-  CardContent,
-  Chip,
-  Stack
+  Paper,
+  Stack,
+  Chip
 } from '@mui/material'
 
 const BlogList = ({ blogs }) => {
@@ -16,78 +15,63 @@ const BlogList = ({ blogs }) => {
   return (
     <Box>
       <Typography
-        variant="h5"
+        variant="h6"
         component="h2"
-        gutterBottom
-        sx={{ fontWeight: 'bold', mb: 3, color: 'text.primary' }}
+        sx={{ fontWeight: 'bold', mb: 2, color: 'text.primary' }}
       >
-        Explore Blogs
+        Blogs ({blogs.length})
       </Typography>
 
-      <Stack spacing={2}>
+      <Stack spacing={1.5}>
         {sortedBlogs.map(blog => (
-          <Card
+          <Paper
             key={blog.id}
             component={Link}
             to={`/blogs/${blog.id}`}
-            elevation={1}
+            elevation={0}
+            variant="outlined"
             sx={{
+              p: 2,
               textDecoration: 'none',
-              display: 'block',
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
               borderRadius: 2,
-              transition: 'all 0.2s ease-in-out',
-              borderLeft: '5px solid',
-              borderColor: 'primary.main',
+              borderColor: 'divider',
+              transition: 'all 0.2s ease',
               '&:hover': {
-                transform: 'translateY(-3px)',
-                boxShadow: 6,
-                borderColor: 'secondary.main',
                 backgroundColor: 'action.hover',
+                borderColor: 'primary.main',
               }
             }}
           >
-            <CardContent
-              sx={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                py: 2.5,
-                px: 3,
-                '&:last-child': { pb: 2.5 }
-              }}
-            >
-              <Box sx={{ pr: 2 }}>
-                <Typography
-                  variant="h6"
-                  component="h3"
-                  sx={{
-                    fontWeight: 600,
-                    color: 'text.primary',
-                    mb: 0.5
-                  }}
-                >
-                  {blog.title}
-                </Typography>
-                <Typography
-                  variant="body2"
-                  color="text.secondary"
-                >
-                  By {blog.author}
-                </Typography>
-              </Box>
-
-              <Chip
-                label={` ${blog.likes} likes`}
-                color="primary"
-                variant="outlined"
+            <Box sx={{ minWidth: 0, pr: 2 }}>
+              <Typography
+                variant="subtitle1"
+                component="h3"
                 sx={{
-                  fontWeight: 'bold',
-                  borderRadius: '16px',
-                  backgroundColor: 'background.paper'
+                  fontWeight: 600,
+                  color: 'text.primary',
+                  mb: 0.5
                 }}
-              />
-            </CardContent>
-          </Card>
+              >
+                {blog.title}
+              </Typography>
+              <Typography
+                variant="body2"
+                color="text.secondary"
+              >
+                by {blog.author}
+              </Typography>
+            </Box>
+
+            <Chip
+              label={`${blog.likes}`}
+              size="small"
+              variant="outlined"
+              sx={{ fontWeight: 500, flexShrink: 0 }}
+            />
+          </Paper>
         ))}
       </Stack>
     </Box>
